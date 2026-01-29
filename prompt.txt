@@ -112,3 +112,16 @@ Format
 Create a single HTML artifact using the text/html type that implements all essential features with production-quality code.
 
 Include comprehensive functionality that demonstrates your technical skills in both web development and 3D graphics programming, while maintaining excellent user experience and visual polish suitable for a portfolio presentation.
+
+
+Refine the reaction timer experience to be clean, simple, and platform-appropriate.
+
+Remove all references to “3D” and present the game simply as Reaction Timer, keeping the naming straightforward and easy to understand.
+
+Place the “Click here or press space to start” instruction inside the game container, positioned below the interactive shape, consistent with where the false-start message appears. This ensures all interaction guidance lives within the play area and maintains visual cohesion.
+
+On mobile devices, remove any references to the space bar, as users will naturally interact via touch. Optimize the layout to reduce unnecessary dead space on smaller screens, tightening vertical spacing while preserving clarity.
+
+Adjust the overall layout so there is less space between the title and the play area, allowing the interactive element to feel more immediately accessible and keeping the user’s focus on gameplay.
+
+The goal is a focused, intuitive interface that adapts naturally across desktop and mobile without redundant or confusing instructions
