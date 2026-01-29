@@ -1,847 +1,867 @@
-Reaction timer · HTML
-Copy
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Reaction Timer | Portfolio Project</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0F172A;
-            color: #F1F5F9;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-        }
-        
-        header {
-            padding: 2rem;
-            text-align: center;
-            background: linear-gradient(180deg, #1E293B 0%, rgba(30, 41, 59, 0) 100%);
-        }
-        
-        h1 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #3B82F6 0%, #10B981 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .subtitle {
-            color: #94A3B8;
-            font-size: 1rem;
-            font-weight: 500;
-        }
-        
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            gap: 2rem;
-        }
-        
-        .game-container {
-            width: 100%;
-            max-width: 800px;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        
-        .canvas-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            aspect-ratio: 1;
-            background: #1E293B;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-            border: 2px solid #334155;
-            margin: 0 auto;
-            cursor: pointer;
-            transition: border-color 0.3s ease;
-        }
-        
-        .canvas-wrapper:hover {
-            border-color: #475569;
-        }
-        
-        #gameCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .game-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        .state-message {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            font-family: 'Poppins', sans-serif;
-            font-size: 3rem;
-            font-weight: 700;
-            text-align: right;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            opacity: 0;
-            border: 2px solid transparent;
-        }
-        
-        .state-message.visible {
-            opacity: 1;
-        }
-        
-        .state-message.idle {
-            color: #94A3B8;
-            border-color: #334155;
-        }
-        
-        .state-message.ready {
-            color: #10B981;
-            border-color: #10B981;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        .state-message.waiting {
-            color: #F59E0B;
-            border-color: #F59E0B;
-        }
-        
-        .state-message.result {
-            color: #3B82F6;
-            border-color: #3B82F6;
-            font-size: 3.5rem;
-        }
-        
-        .state-message.error {
-            color: #EF4444;
-            border-color: #EF4444;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .controls {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #1E293B;
-            color: #F1F5F9;
-            border: 2px solid #334155;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-            color: white;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        
-        .stat-card {
-            background: #1E293B;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            border: 1px solid #334155;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            border-color: #3B82F6;
-            transform: translateY(-2px);
-        }
-        
-        .stat-label {
-            font-size: 0.875rem;
-            color: #94A3B8;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
-        }
-        
-        .stat-value {
-            font-family: 'Poppins', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #3B82F6;
-        }
-        
-        .stat-unit {
-            font-size: 1rem;
-            color: #94A3B8;
-            font-weight: 500;
-        }
-        
-        .instructions-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(15, 23, 42, 0.98);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        
-        .instructions-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        .instructions-content {
-            max-width: 500px;
-            padding: 2rem;
-            text-align: left;
-        }
-        
-        .instructions-content h2 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
-            color: #F1F5F9;
-            text-align: center;
-        }
-        
-        .instructions-content ol {
-            padding-left: 1.5rem;
-            color: #94A3B8;
-            line-height: 1.8;
-            margin-bottom: 2rem;
-        }
-        
-        .instructions-content li {
-            margin-bottom: 0.75rem;
-        }
-        
-        .instructions-content strong {
-            color: #F1F5F9;
-        }
-        
-        .instructions-content button {
-            width: 100%;
-            display: block;
-        }
-        
-        .performance-guide {
-            background: #1E293B;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            border: 1px solid #334155;
-            margin-top: 1rem;
-        }
-        
-        .performance-guide h3 {
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            color: #F1F5F9;
-            text-align: center;
-        }
-        
-        .performance-scale {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .performance-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            background: rgba(51, 65, 85, 0.3);
-        }
-        
-        .performance-label {
-            font-weight: 600;
-            min-width: 120px;
-        }
-        
-        .performance-range {
-            color: #94A3B8;
-            font-size: 0.875rem;
-        }
-        
-        .performance-item.amazing .performance-label { color: #10B981; }
-        .performance-item.very-good .performance-label { color: #3B82F6; }
-        .performance-item.good .performance-label { color: #8B5CF6; }
-        .performance-item.average .performance-label { color: #F59E0B; }
-        .performance-item.below-average .performance-label { color: #EF4444; }
-        
-        footer {
-            padding: 2rem;
-            text-align: center;
-            color: #94A3B8;
-            font-size: 0.875rem;
-        }
-        
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .state-message {
-                font-size: 2rem;
-                padding: 0.75rem 1rem;
-                top: 1rem;
-                right: 1rem;
-            }
-            
-            .state-message.result {
-                font-size: 2.5rem;
-            }
-            
-            .instructions-content {
-                padding: 1.5rem;
-            }
-            
-            .instructions-content h2 {
-                font-size: 1.5rem;
-            }
-            
-            .instructions-content ol {
-                font-size: 0.9375rem;
-            }
-            
-            .performance-guide h3 {
-                font-size: 0.9375rem;
-            }
-            
-            .performance-item {
-                font-size: 0.875rem;
-            }
-            
-            .performance-label {
-                min-width: 100px;
-                font-size: 0.875rem;
-            }
-            
-            .performance-range {
-                font-size: 0.8125rem;
-            }
-            
-            button {
-                padding: 0.875rem 1.5rem;
-                font-size: 0.9375rem;
-            }
-            
-            .stat-value {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Reaction Timer | Portfolio Project</title>
+
+  <!-- Polished but subtle: tiny inline SVG favicon (no external request, no clutter) -->
+  <link rel="icon" type="image/svg+xml"
+        href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%233B82F6"/><stop offset="1" stop-color="%2310B981"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="%230F172A"/><path d="M18 42 L32 14 L46 42 Z" fill="url(%23g)"/><circle cx="32" cy="46" r="4" fill="%2394A3B8"/></svg>' />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
+
+    :root{
+      --bg:#0F172A;
+      --surface:#1E293B;
+      --surface-2:#0B1224;
+      --border:#334155;
+      --text:#F1F5F9;
+      --muted:#94A3B8;
+      --primary:#3B82F6;
+      --ready:#10B981;
+      --wait:#F59E0B;
+      --error:#EF4444;
+    }
+
+    *{ margin:0; padding:0; box-sizing:border-box; }
+
+    body{
+      font-family:'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow-x:hidden;
+    }
+
+    header{
+      padding:2rem 1.5rem 1.25rem;
+      text-align:center;
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(30,41,59,0) 100%);
+    }
+
+    h1{
+      font-family:'Poppins', sans-serif;
+      font-size:2.25rem;
+      font-weight:700;
+      margin-bottom:0.35rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--ready) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+
+    .subtitle{
+      color:var(--muted);
+      font-size:0.98rem;
+      font-weight:500;
+    }
+
+    main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:1.75rem 1.25rem 2.25rem;
+      gap:1.5rem;
+    }
+
+    .game-container{
+      width:100%;
+      max-width:860px;
+      display:flex;
+      flex-direction:column;
+      gap:1rem;
+      align-items:center;
+    }
+
+    /* Focused hierarchy: big game area, minimal controls */
+    .canvas-wrapper{
+      position:relative;
+      width:100%;
+      max-width:640px;
+      aspect-ratio:1;
+      background:var(--surface);
+      border-radius:1.5rem;
+      overflow:hidden;
+      border:2px solid var(--border);
+      box-shadow: 0 22px 60px rgba(0,0,0,0.35);
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+      transition: border-color 220ms ease, transform 220ms ease;
+    }
+
+    .canvas-wrapper:hover{ border-color:#475569; }
+    .canvas-wrapper:active{ transform: translateY(1px); }
+
+    .canvas-wrapper:focus-visible{
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.25), 0 22px 60px rgba(0,0,0,0.35);
+    }
+
+    #gameCanvas{ display:block; width:100%; height:100%; }
+
+    .hud{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:10;
+    }
+
+    /* Top-right message: minimal + legible */
+    .status{
+      position:absolute;
+      top:1rem;
+      right:1rem;
+      max-width: calc(100% - 2rem);
+      padding:0.85rem 1rem;
+      border-radius:0.9rem;
+      border:1px solid transparent;
+      background: rgba(11,18,36,0.78);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+      opacity:0;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease;
+      font-family:'Poppins', sans-serif;
+      line-height:1.15;
+    }
+
+    .status.visible{ opacity:1; transform: translateY(0); }
+
+    .status .big{
+      font-size:2.4rem;
+      font-weight:700;
+      letter-spacing:-0.02em;
+    }
+
+    .status .sub{
+      margin-top:0.35rem;
+      font-family:'Inter', sans-serif;
+      color:var(--muted);
+      font-size:0.95rem;
+      font-weight:600;
+    }
+
+    .status.idle{ border-color: rgba(148,163,184,0.18); }
+    .status.wait{ border-color: rgba(245,158,11,0.5); }
+    .status.go{ border-color: rgba(16,185,129,0.55); }
+    .status.result{ border-color: rgba(59,130,246,0.55); }
+    .status.err{ border-color: rgba(239,68,68,0.55); }
+
+    .status.idle .big{ color: var(--muted); font-size:1.15rem; font-weight:700; }
+    .status.wait .big{ color: var(--wait); }
+    .status.go .big{ color: var(--ready); }
+    .status.result .big{ color: var(--primary); }
+    .status.err .big{ color: var(--error); font-size:1.15rem; }
+
+    /* Instructions inside game space, shown ONCE, disappear naturally on first start */
+    .instructions{
+      position:absolute;
+      inset:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(15,23,42,0.94);
+      backdrop-filter: blur(12px);
+      transition: opacity 240ms ease;
+    }
+
+    .instructions.hidden{
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .instructions-card{
+      width:min(520px, calc(100% - 2.25rem));
+      padding:1.4rem 1.35rem;
+      border-radius:1.2rem;
+      border:1px solid rgba(148,163,184,0.18);
+      background: rgba(11,18,36,0.72);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+    }
+
+    .instructions-card h2{
+      font-family:'Poppins', sans-serif;
+      font-size:1.25rem;
+      text-align:center;
+      margin-bottom:0.75rem;
+    }
+
+    .instructions-card p{
+      color:var(--muted);
+      line-height:1.55;
+      font-weight:600;
+      font-size:0.98rem;
+      margin-bottom:0.9rem;
+      text-align:center;
+    }
+
+    .kbd{
+      display:inline-flex;
+      align-items:center;
+      gap:0.4rem;
+      padding:0.2rem 0.5rem;
+      border-radius:0.5rem;
+      border:1px solid rgba(148,163,184,0.22);
+      background: rgba(30,41,59,0.45);
+      font-weight:800;
+      color:var(--text);
+      font-size:0.9rem;
+    }
+
+    .dot{
+      display:inline-block;
+      width:0.55rem;
+      height:0.55rem;
+      border-radius:999px;
+      vertical-align:middle;
+      margin:0 0.25rem;
+      background: var(--ready);
+      box-shadow: 0 0 0 6px rgba(16,185,129,0.12);
+    }
+
+    .instruction-cta{
+      display:flex;
+      gap:0.75rem;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:0.35rem;
+    }
+
+    button{
+      font-family:'Inter', system-ui, sans-serif;
+      font-size:0.98rem;
+      font-weight:800;
+      padding:0.9rem 1.25rem;
+      border:none;
+      border-radius:0.9rem;
+      cursor:pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+
+    button:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.32);
+    }
+
+    button:active{ transform: translateY(0); }
+
+    button:disabled{ opacity:0.5; cursor:not-allowed; transform:none; box-shadow: 0 8px 24px rgba(0,0,0,0.16); }
+
+    .btn-primary{
+      background: linear-gradient(135deg, var(--primary) 0%, #2563EB 100%);
+      color:#fff;
+    }
+    .btn-secondary{
+      background: rgba(30,41,59,0.55);
+      color: var(--text);
+      border: 1px solid rgba(148,163,184,0.18);
+    }
+    .btn-danger{
+      background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%);
+      color:#fff;
+    }
+
+    /* Supporting UI: compact stats row */
+    .stats{
+      width:100%;
+      max-width:640px;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:0.75rem;
+      margin-top:0.25rem;
+    }
+
+    .stat{
+      background: rgba(30,41,59,0.55);
+      border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 0.95rem;
+      padding:0.9rem 1rem;
+    }
+
+    .stat .label{
+      font-size:0.78rem;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:800;
+      margin-bottom:0.4rem;
+    }
+
+    .stat .value{
+      font-family:'Poppins', sans-serif;
+      font-size:1.35rem;
+      font-weight:800;
+      color: var(--primary);
+      line-height:1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .unit{
+      font-family:'Inter', sans-serif;
+      font-size:0.95rem;
+      font-weight:800;
+      margin-left:0.2rem;
+      color: var(--muted);
+    }
+
+    /* Minimal controls: only what matters */
+    .controls{
+      width:100%;
+      max-width:640px;
+      display:flex;
+      justify-content:center;
+      gap:0.75rem;
+      flex-wrap:wrap;
+      margin-top:0.4rem;
+    }
+
+    footer{
+      padding:1.25rem;
+      text-align:center;
+      color: rgba(148,163,184,0.75);
+      font-size:0.85rem;
+    }
+
+    @media (max-width: 720px){
+      h1{ font-size:1.95rem; }
+      main{ padding:1.35rem 1rem 1.75rem; }
+      .status .big{ font-size:2.05rem; }
+      .stats{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
 </head>
+
 <body>
-    <header>
-        <h1>3D Reaction Timer</h1>
-        <p class="subtitle">Test Your Reflexes with Animated 3D Graphics</p>
-    </header>
-    
-    <main>
-        <div class="game-container">
-            <div class="canvas-wrapper">
-                <canvas id="gameCanvas"></canvas>
-                <div class="game-overlay">
-                    <div class="state-message" id="stateMessage"></div>
-                </div>
-                <div class="instructions-overlay" id="instructionsOverlay">
-                    <div class="instructions-content">
-                        <h2>How to Play</h2>
-                        <ol>
-                            <li>Click <strong>Start Game</strong> to begin</li>
-                            <li>Watch the 3D shape carefully in the box</li>
-                            <li>When the shape turns <strong style="color: #10B981;">green</strong> and starts spinning rapidly, click the box immediately</li>
-                            <li>Your reaction time will be displayed in the top-right corner</li>
-                            <li><strong style="color: #EF4444;">Warning:</strong> Clicking too early counts as a false start!</li>
-                        </ol>
-                        <button class="btn-primary" id="gotItBtn">Got It!</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="controls">
-                <button class="btn-primary" id="startBtn">Start Game</button>
-                <button class="btn-danger" id="stopBtn" disabled>Stop</button>
-                <button class="btn-secondary" id="resetBtn">Reset Stats</button>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Last Time</div>
-                    <div class="stat-value" id="lastTime">—</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Average</div>
-                    <div class="stat-value" id="avgTime">—</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Best Time</div>
-                    <div class="stat-value" id="bestTime">—</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Attempts</div>
-                    <div class="stat-value" id="attempts">0</div>
-                </div>
-            </div>
-            
-            <div class="performance-guide">
-                <h3>Reaction Time Guide</h3>
-                <div class="performance-scale">
-                    <div class="performance-item amazing">
-                        <span class="performance-label">Amazing</span>
-                        <span class="performance-range">&lt; 150ms</span>
-                    </div>
-                    <div class="performance-item very-good">
-                        <span class="performance-label">Very Good</span>
-                        <span class="performance-range">150-200ms</span>
-                    </div>
-                    <div class="performance-item good">
-                        <span class="performance-label">Good</span>
-                        <span class="performance-range">200-250ms</span>
-                    </div>
-                    <div class="performance-item average">
-                        <span class="performance-label">Average</span>
-                        <span class="performance-range">250-300ms</span>
-                    </div>
-                    <div class="performance-item below-average">
-                        <span class="performance-label">Below Average</span>
-                        <span class="performance-range">&gt; 300ms</span>
-                    </div>
-                </div>
-            </div>
+<header>
+  <h1>3D Reaction Timer</h1>
+  <p class="subtitle">A clean, focused reflex test with 3D feedback</p>
+</header>
+
+<main>
+  <div class="game-container">
+    <!-- Start is discoverable: click anywhere in here or press Space -->
+    <div class="canvas-wrapper" id="canvasWrapper" role="button" tabindex="0"
+         aria-label="Game area. Click or press Space to start and react.">
+      <canvas id="gameCanvas"></canvas>
+
+      <div class="hud">
+        <div class="status idle visible" id="statusBox">
+          <div class="big" id="statusBig">Click anywhere or press Space</div>
+          <div class="sub" id="statusSub">Start a round, then react when it turns green</div>
         </div>
-    </main>
-    
-    <footer>
-        <p>Built with Three.js • Portfolio Project by Frontend Developer</p>
-    </footer>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        // Game State Management
-        const GameState = {
-            IDLE: 'idle',
-            READY: 'ready',
-            WAITING: 'waiting',
-            ACTIVE: 'active',
-            RESULT: 'result',
-            ERROR: 'error'
-        };
-        
-        class ReactionTimer {
-            constructor() {
-                this.state = GameState.IDLE;
-                this.startTime = null;
-                this.waitTimeout = null;
-                this.attempts = [];
-                this.currentAttempt = null;
-                this.instructionsShown = false;
-                
-                this.initDOM();
-                this.initThreeJS();
-                this.initEventListeners();
-                this.updateStats();
-                this.animate();
-                // Don't show message until instructions are dismissed
-            }
-            
-            initDOM() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.stateMessage = document.getElementById('stateMessage');
-                this.startBtn = document.getElementById('startBtn');
-                this.stopBtn = document.getElementById('stopBtn');
-                this.resetBtn = document.getElementById('resetBtn');
-                this.lastTimeEl = document.getElementById('lastTime');
-                this.avgTimeEl = document.getElementById('avgTime');
-                this.bestTimeEl = document.getElementById('bestTime');
-                this.attemptsEl = document.getElementById('attempts');
-                this.instructionsOverlay = document.getElementById('instructionsOverlay');
-                this.gotItBtn = document.getElementById('gotItBtn');
-            }
-            
-            initThreeJS() {
-                // Scene setup
-                this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x1E293B);
-                
-                // Camera setup
-                this.camera = new THREE.PerspectiveCamera(
-                    75,
-                    1, // Square aspect ratio
-                    0.1,
-                    1000
-                );
-                this.camera.position.z = 5;
-                
-                // Renderer setup
-                this.renderer = new THREE.WebGLRenderer({
-                    canvas: this.canvas,
-                    antialias: true
-                });
-                this.updateRendererSize();
-                
-                // Lighting
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-                this.scene.add(ambientLight);
-                
-                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight1.position.set(5, 5, 5);
-                this.scene.add(directionalLight1);
-                
-                const directionalLight2 = new THREE.DirectionalLight(0x3B82F6, 0.5);
-                directionalLight2.position.set(-5, -5, 5);
-                this.scene.add(directionalLight2);
-                
-                const pointLight = new THREE.PointLight(0x10B981, 0.8, 100);
-                pointLight.position.set(0, 0, 8);
-                this.scene.add(pointLight);
-                
-                // Create more interesting shape - icosahedron with wireframe overlay
-                const geometry = new THREE.IcosahedronGeometry(1.5, 1);
-                const material = new THREE.MeshStandardMaterial({
-                    color: 0x334155,
-                    metalness: 0.8,
-                    roughness: 0.2,
-                    flatShading: true
-                });
-                this.mainShape = new THREE.Mesh(geometry, material);
-                this.scene.add(this.mainShape);
-                
-                // Add wireframe overlay for extra detail
-                const wireframeGeometry = new THREE.IcosahedronGeometry(1.52, 1);
-                const wireframeMaterial = new THREE.MeshBasicMaterial({
-                    color: 0x475569,
-                    wireframe: true,
-                    transparent: true,
-                    opacity: 0.3
-                });
-                this.wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
-                this.scene.add(this.wireframe);
-                
-                // Handle window resize
-                window.addEventListener('resize', () => this.updateRendererSize());
-            }
-            
-            updateRendererSize() {
-                const parent = this.canvas.parentElement;
-                const width = parent.clientWidth;
-                const height = parent.clientHeight;
-                
-                this.camera.aspect = width / height;
-                this.camera.updateProjectionMatrix();
-                this.renderer.setSize(width, height);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            }
-            
-            initEventListeners() {
-                this.startBtn.addEventListener('click', () => this.startGame());
-                this.stopBtn.addEventListener('click', () => this.stopGame());
-                this.resetBtn.addEventListener('click', () => this.resetStats());
-                
-                // Handle "Got It" button to dismiss instructions
-                this.gotItBtn.addEventListener('click', () => {
-                    this.instructionsOverlay.classList.add('hidden');
-                    this.instructionsShown = true;
-                    this.showMessage('Click Start to Begin', 'idle');
-                });
-                
-                // Make the entire canvas wrapper clickable
-                this.canvas.parentElement.addEventListener('click', (e) => {
-                    // Don't trigger if clicking on overlay elements or instructions
-                    if ((e.target === this.canvas || e.target === this.canvas.parentElement) && 
-                        !this.instructionsOverlay.classList.contains('hidden')) {
-                        return; // Don't handle clicks while instructions are showing
-                    }
-                    
-                    if (e.target === this.canvas || e.target === this.canvas.parentElement) {
-                        this.handleCanvasClick();
-                    }
-                });
-            }
-            
-            startGame() {
-                if (this.state !== GameState.IDLE && this.state !== GameState.RESULT && this.state !== GameState.ERROR) {
-                    return;
-                }
-                
-                this.state = GameState.READY;
-                this.startBtn.disabled = true;
-                this.stopBtn.disabled = false;
-                this.currentAttempt = null;
-                
-                this.showMessage('Get Ready...', 'ready');
-                
-                // Random delay between 1-5 seconds
-                const delay = 1000 + Math.random() * 4000;
-                
-                this.waitTimeout = setTimeout(() => {
-                    this.activateStimulus();
-                }, delay);
-                
-                this.state = GameState.WAITING;
-                this.showMessage('Wait...', 'waiting');
-                
-                // Update shape appearance for waiting state
-                this.mainShape.material.color.setHex(0xF59E0B);
-                this.mainShape.material.emissive.setHex(0xF59E0B);
-                this.mainShape.material.emissiveIntensity = 0.3;
-                this.wireframe.material.color.setHex(0xF59E0B);
-                this.wireframe.material.opacity = 0.5;
-            }
-            
-            activateStimulus() {
-                this.state = GameState.ACTIVE;
-                this.startTime = performance.now();
-                
-                this.showMessage('CLICK NOW!', 'result');
-                
-                // Update shape appearance for active state
-                this.mainShape.material.color.setHex(0x10B981);
-                this.mainShape.material.emissive.setHex(0x10B981);
-                this.mainShape.material.emissiveIntensity = 0.8;
-                this.wireframe.material.color.setHex(0x10B981);
-                this.wireframe.material.opacity = 0.8;
-                
-                // Increase rotation speed
-                this.mainShape.userData.fastRotation = true;
-                this.wireframe.userData.fastRotation = true;
-            }
-            
-            handleCanvasClick() {
-                if (this.state === GameState.WAITING) {
-                    this.handleFalseStart();
-                } else if (this.state === GameState.ACTIVE) {
-                    this.recordReaction();
-                }
-            }
-            
-            handleFalseStart() {
-                this.state = GameState.ERROR;
-                
-                if (this.waitTimeout) {
-                    clearTimeout(this.waitTimeout);
-                    this.waitTimeout = null;
-                }
-                
-                this.showMessage('Too Early! False Start', 'error');
-                
-                // Update shape appearance for error state
-                this.mainShape.material.color.setHex(0xEF4444);
-                this.mainShape.material.emissive.setHex(0xEF4444);
-                this.mainShape.material.emissiveIntensity = 0.5;
-                this.mainShape.userData.fastRotation = false;
-                this.wireframe.material.color.setHex(0xEF4444);
-                this.wireframe.material.opacity = 0.6;
-                this.wireframe.userData.fastRotation = false;
-                
-                this.startBtn.disabled = false;
-                this.stopBtn.disabled = true;
-                
-                setTimeout(() => {
-                    if (this.state === GameState.ERROR) {
-                        this.resetShapeAppearance();
-                    }
-                }, 2000);
-            }
-            
-            recordReaction() {
-                const reactionTime = Math.round(performance.now() - this.startTime);
-                this.currentAttempt = reactionTime;
-                this.attempts.push(reactionTime);
-                
-                this.state = GameState.RESULT;
-                this.showMessage(`${reactionTime} ms`, 'result');
-                
-                this.updateStats();
-                this.resetShapeAppearance();
-                
-                this.startBtn.disabled = false;
-                this.stopBtn.disabled = true;
-                this.mainShape.userData.fastRotation = false;
-                this.wireframe.userData.fastRotation = false;
-            }
-            
-            stopGame() {
-                if (this.waitTimeout) {
-                    clearTimeout(this.waitTimeout);
-                    this.waitTimeout = null;
-                }
-                
-                this.state = GameState.IDLE;
-                this.showMessage('Game Stopped', 'idle');
-                this.resetShapeAppearance();
-                
-                this.startBtn.disabled = false;
-                this.stopBtn.disabled = true;
-                this.mainShape.userData.fastRotation = false;
-                this.wireframe.userData.fastRotation = false;
-            }
-            
-            resetStats() {
-                this.attempts = [];
-                this.currentAttempt = null;
-                this.updateStats();
-                
-                if (this.state === GameState.IDLE || this.state === GameState.RESULT || this.state === GameState.ERROR) {
-                    this.showMessage('Stats Reset', 'idle');
-                    this.resetShapeAppearance();
-                }
-            }
-            
-            resetShapeAppearance() {
-                this.mainShape.material.color.setHex(0x334155);
-                this.mainShape.material.emissive.setHex(0x000000);
-                this.mainShape.material.emissiveIntensity = 0;
-                this.wireframe.material.color.setHex(0x475569);
-                this.wireframe.material.opacity = 0.3;
-            }
-            
-            updateStats() {
-                // Last time
-                if (this.currentAttempt !== null) {
-                    this.lastTimeEl.innerHTML = `${this.currentAttempt}<span class="stat-unit">ms</span>`;
-                } else {
-                    this.lastTimeEl.textContent = '—';
-                }
-                
-                // Attempts count
-                this.attemptsEl.textContent = this.attempts.length;
-                
-                if (this.attempts.length === 0) {
-                    this.avgTimeEl.textContent = '—';
-                    this.bestTimeEl.textContent = '—';
-                    return;
-                }
-                
-                // Average time
-                const avg = Math.round(
-                    this.attempts.reduce((sum, time) => sum + time, 0) / this.attempts.length
-                );
-                this.avgTimeEl.innerHTML = `${avg}<span class="stat-unit">ms</span>`;
-                
-                // Best time
-                const best = Math.min(...this.attempts);
-                this.bestTimeEl.innerHTML = `${best}<span class="stat-unit">ms</span>`;
-            }
-            
-            showMessage(text, className) {
-                this.stateMessage.textContent = text;
-                this.stateMessage.className = `state-message visible ${className}`;
-                
-                // Hide message after delay for non-persistent states
-                if (className === 'result' || className === 'error') {
-                    setTimeout(() => {
-                        if (this.stateMessage.classList.contains(className)) {
-                            this.stateMessage.classList.remove('visible');
-                        }
-                    }, 2500);
-                }
-            }
-            
-            animate() {
-                requestAnimationFrame(() => this.animate());
-                
-                // Rotate main shape and wireframe
-                if (this.mainShape.userData.fastRotation) {
-                    this.mainShape.rotation.x += 0.05;
-                    this.mainShape.rotation.y += 0.05;
-                    this.wireframe.rotation.x += 0.05;
-                    this.wireframe.rotation.y += 0.05;
-                } else {
-                    this.mainShape.rotation.x += 0.005;
-                    this.mainShape.rotation.y += 0.01;
-                    this.wireframe.rotation.x += 0.005;
-                    this.wireframe.rotation.y += 0.01;
-                }
-                
-                this.renderer.render(this.scene, this.camera);
-            }
+      </div>
+
+      <div class="instructions" id="instructionsOverlay">
+        <div class="instructions-card">
+          <h2>Quick instructions</h2>
+          <p>
+            <span class="kbd">Space</span> or <strong>click anywhere</strong> to start.
+            Wait for the shape to turn <span class="dot"></span><strong>green</strong>, then click/press <span class="kbd">Space</span> as fast as you can.
+            <br><br>
+            Clicking early is a <strong style="color:var(--error);">false start</strong>.
+          </p>
+          <div class="instruction-cta">
+            <button class="btn-primary" id="startFromOverlayBtn" type="button">Start (Space)</button>
+            <button class="btn-secondary" id="dismissOverlayBtn" type="button">Got it</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" aria-label="Session statistics">
+      <div class="stat">
+        <div class="label">Last</div>
+        <div class="value" id="lastTime">—</div>
+      </div>
+      <div class="stat">
+        <div class="label">Average</div>
+        <div class="value" id="avgTime">—</div>
+      </div>
+      <div class="stat">
+        <div class="label">Best</div>
+        <div class="value" id="bestTime">—</div>
+      </div>
+      <div class="stat">
+        <div class="label">Attempts</div>
+        <div class="value" id="attempts">0</div>
+      </div>
+    </div>
+
+    <div class="controls" aria-label="Controls">
+      <button class="btn-primary" id="startBtn" type="button">Start</button>
+      <button class="btn-danger" id="stopBtn" type="button" disabled>Stop</button>
+      <button class="btn-secondary" id="resetBtn" type="button">Reset</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Built with Three.js • Designed for clarity and flow
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  const GameState = {
+    IDLE: 'idle',
+    WAITING: 'waiting',
+    ACTIVE: 'active',
+    RESULT: 'result',
+    ERROR: 'error',
+  };
+
+  // Human-friendly categories
+  function gradeReaction(ms) {
+    if (ms < 150) return { label: 'Amazing', detail: 'Elite reflexes', key: 'amazing' };
+    if (ms < 200) return { label: 'Very Good', detail: 'Fast and consistent', key: 'very-good' };
+    if (ms < 250) return { label: 'Good', detail: 'Above average', key: 'good' };
+    if (ms < 300) return { label: 'Average', detail: 'Typical range', key: 'average' };
+    return { label: 'Below Average', detail: 'Warm up and try again', key: 'below-average' };
+  }
+
+  class ReactionTimer {
+    constructor() {
+      this.state = GameState.IDLE;
+      this.startTime = null;
+      this.waitTimeout = null;
+
+      // Attempts = rounds started (button or space or click)
+      this.roundsStarted = 0;
+
+      // Valid reaction times only
+      this.reactionTimes = [];
+      this.currentAttempt = null;
+
+      // Instructions: shown once per page load; disappear naturally when play begins
+      this.instructionsVisible = true;
+      this.overlayEverDismissed = false;
+
+      // Space handling
+      this._spaceDown = false;
+
+      this.initDOM();
+      this.initThree();
+      this.initEvents();
+      this.updateStats();
+      this.setIdleVisual();
+      this.focusGameArea();
+      this.animate();
+    }
+
+    initDOM() {
+      this.canvasWrapper = document.getElementById('canvasWrapper');
+      this.canvas = document.getElementById('gameCanvas');
+
+      this.statusBox = document.getElementById('statusBox');
+      this.statusBig = document.getElementById('statusBig');
+      this.statusSub = document.getElementById('statusSub');
+
+      this.instructionsOverlay = document.getElementById('instructionsOverlay');
+      this.startFromOverlayBtn = document.getElementById('startFromOverlayBtn');
+      this.dismissOverlayBtn = document.getElementById('dismissOverlayBtn');
+
+      this.startBtn = document.getElementById('startBtn');
+      this.stopBtn = document.getElementById('stopBtn');
+      this.resetBtn = document.getElementById('resetBtn');
+
+      this.lastTimeEl = document.getElementById('lastTime');
+      this.avgTimeEl = document.getElementById('avgTime');
+      this.bestTimeEl = document.getElementById('bestTime');
+      this.attemptsEl = document.getElementById('attempts');
+    }
+
+    initThree() {
+      this.scene = new THREE.Scene();
+      this.scene.background = new THREE.Color(0x1E293B);
+
+      this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      this.camera.position.z = 5;
+
+      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+      this.updateRendererSize();
+
+      // Lighting
+      this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+      const dir1 = new THREE.DirectionalLight(0xffffff, 0.8);
+      dir1.position.set(5, 5, 5);
+      this.scene.add(dir1);
+
+      const dir2 = new THREE.DirectionalLight(0x3B82F6, 0.55);
+      dir2.position.set(-5, -5, 6);
+      this.scene.add(dir2);
+
+      const point = new THREE.PointLight(0x10B981, 0.75, 100);
+      point.position.set(0, 0, 8);
+      this.scene.add(point);
+
+      // Shape
+      const geom = new THREE.IcosahedronGeometry(1.5, 1);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x334155,
+        metalness: 0.85,
+        roughness: 0.22,
+        flatShading: true
+      });
+      this.shape = new THREE.Mesh(geom, mat);
+      this.scene.add(this.shape);
+
+      // Wireframe accent
+      const wireGeom = new THREE.IcosahedronGeometry(1.52, 1);
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0x475569,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.25
+      });
+      this.wire = new THREE.Mesh(wireGeom, wireMat);
+      this.scene.add(this.wire);
+
+      window.addEventListener('resize', () => this.updateRendererSize(), { passive: true });
+    }
+
+    updateRendererSize() {
+      const parent = this.canvas.parentElement;
+      const w = parent.clientWidth;
+      const h = parent.clientHeight;
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(w, h);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    }
+
+    initEvents() {
+      // Primary start: click anywhere in game area OR Space
+      this.canvasWrapper.addEventListener('click', () => {
+        this.handlePress('pointer');
+      });
+
+      // Start button (kept for discoverability, but not required)
+      this.startBtn.addEventListener('click', () => {
+        this.handlePress('startBtn');
+      });
+
+      this.stopBtn.addEventListener('click', () => this.stopGame());
+      this.resetBtn.addEventListener('click', () => this.resetStats());
+
+      // Overlay actions
+      this.dismissOverlayBtn.addEventListener('click', () => this.dismissOverlay());
+      this.startFromOverlayBtn.addEventListener('click', () => this.handlePress('overlayStart'));
+
+      // Space always works (prevents "press focused button" behavior)
+      window.addEventListener('keydown', (e) => {
+        if (e.code !== 'Space') return;
+        e.preventDefault();
+        if (this._spaceDown) return;
+        this._spaceDown = true;
+
+        const active = document.activeElement;
+        if (active && ['BUTTON','INPUT','TEXTAREA','SELECT'].includes(active.tagName)) active.blur();
+        this.focusGameArea();
+
+        this.handlePress('space');
+      }, { passive: false });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.code !== 'Space') return;
+        this._spaceDown = false;
+      });
+    }
+
+    focusGameArea() {
+      // keeps keyboard flow consistent
+      this.canvasWrapper.focus();
+    }
+
+    dismissOverlay() {
+      if (!this.instructionsVisible) return;
+      this.instructionsVisible = false;
+      this.overlayEverDismissed = true;
+      this.instructionsOverlay.classList.add('hidden');
+      this.focusGameArea();
+    }
+
+    dismissOverlayIfNeeded() {
+      // shown only once per load; disappears naturally when the game begins
+      if (this.instructionsVisible && !this.overlayEverDismissed) {
+        this.dismissOverlay();
+      } else if (this.instructionsVisible) {
+        // if user kept it visible but starts anyway, hide it
+        this.dismissOverlay();
+      }
+    }
+
+    handlePress(source) {
+      // If idle/result/error: start a round
+      if (this.state === GameState.IDLE || this.state === GameState.RESULT || this.state === GameState.ERROR) {
+        this.dismissOverlayIfNeeded();
+        this.startGame();
+        return;
+      }
+      // If waiting: false start
+      if (this.state === GameState.WAITING) {
+        this.handleFalseStart();
+        return;
+      }
+      // If active: record
+      if (this.state === GameState.ACTIVE) {
+        this.recordReaction();
+        return;
+      }
+    }
+
+    startGame() {
+      if (this.state === GameState.WAITING || this.state === GameState.ACTIVE) return;
+
+      this.clearWaitTimeout();
+
+      // Attempts count starts (any method)
+      this.roundsStarted += 1;
+      this.updateStats();
+
+      this.state = GameState.WAITING;
+
+      this.startBtn.disabled = true;
+      this.stopBtn.disabled = false;
+
+      this.currentAttempt = null;
+
+      this.setWaitingVisual();
+      this.setStatus('WAIT…', 'Click/Space when it turns green', 'wait', true);
+
+      const delay = 1000 + Math.random() * 4000;
+      this.waitTimeout = setTimeout(() => this.activateStimulus(), delay);
+      this.focusGameArea();
+    }
+
+    activateStimulus() {
+      if (this.state !== GameState.WAITING) return;
+
+      this.state = GameState.ACTIVE;
+      this.startTime = performance.now();
+
+      this.setActiveVisual();
+      this.setStatus('GO!', 'React now', 'go', true);
+
+      this.shape.userData.fast = true;
+      this.wire.userData.fast = true;
+    }
+
+    handleFalseStart() {
+      if (this.state !== GameState.WAITING) return;
+
+      this.clearWaitTimeout();
+      this.state = GameState.ERROR;
+
+      this.setErrorVisual();
+      this.setStatus('Too early', 'False start — start again', 'err', false, 1400);
+
+      this.startBtn.disabled = false;
+      this.stopBtn.disabled = true;
+
+      setTimeout(() => {
+        if (this.state === GameState.ERROR) {
+          this.state = GameState.IDLE;
+          this.setIdleVisual();
+          this.setStatus('Click anywhere or press Space', 'Start a round, then react on green', 'idle', true);
+          this.focusGameArea();
         }
-        
-        // Initialize game when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => {
-            new ReactionTimer();
-        });
-    </script>
+      }, 900);
+    }
+
+    recordReaction() {
+      if (this.state !== GameState.ACTIVE || this.startTime == null) return;
+
+      const ms = Math.max(0, Math.round(performance.now() - this.startTime));
+      this.currentAttempt = ms;
+      this.reactionTimes.push(ms);
+
+      const g = gradeReaction(ms);
+
+      this.state = GameState.RESULT;
+
+      // Human-friendly result: category + short meaning
+      this.setStatus(`${ms} ms`, `${g.label} — ${g.detail}`, 'result', false, 2600);
+
+      this.updateStats();
+      this.setIdleVisual();
+
+      this.startBtn.disabled = false;
+      this.stopBtn.disabled = true;
+
+      this.shape.userData.fast = false;
+      this.wire.userData.fast = false;
+
+      setTimeout(() => {
+        if (this.state === GameState.RESULT) {
+          this.setStatus('Click anywhere or press Space', 'Try again to beat your best', 'idle', true);
+        }
+      }, 2650);
+
+      this.focusGameArea();
+    }
+
+    stopGame() {
+      if (this.state !== GameState.WAITING && this.state !== GameState.ACTIVE) return;
+
+      this.clearWaitTimeout();
+      this.state = GameState.IDLE;
+
+      this.setIdleVisual();
+      this.setStatus('Stopped', 'Click/Space to start again', 'idle', false, 1200);
+
+      this.startBtn.disabled = false;
+      this.stopBtn.disabled = true;
+
+      this.shape.userData.fast = false;
+      this.wire.userData.fast = false;
+
+      setTimeout(() => {
+        if (this.state === GameState.IDLE) {
+          this.setStatus('Click anywhere or press Space', 'Start a round, then react on green', 'idle', true);
+        }
+      }, 1250);
+
+      this.focusGameArea();
+    }
+
+    resetStats() {
+      this.roundsStarted = 0;
+      this.reactionTimes = [];
+      this.currentAttempt = null;
+      this.updateStats();
+
+      this.setStatus('Reset', 'Stats cleared', 'idle', false, 900);
+
+      if (this.state !== GameState.WAITING && this.state !== GameState.ACTIVE) {
+        this.state = GameState.IDLE;
+        this.setIdleVisual();
+        setTimeout(() => {
+          if (this.state === GameState.IDLE) {
+            this.setStatus('Click anywhere or press Space', 'Start a round, then react on green', 'idle', true);
+          }
+        }, 950);
+      }
+
+      this.focusGameArea();
+    }
+
+    clearWaitTimeout() {
+      if (this.waitTimeout) {
+        clearTimeout(this.waitTimeout);
+        this.waitTimeout = null;
+      }
+    }
+
+    setStatus(big, sub, mode, persist, autoHideMs) {
+      this.statusBox.className = `status visible ${mode}`;
+      this.statusBig.textContent = big;
+      this.statusSub.textContent = sub;
+
+      if (persist) return;
+
+      const ms = typeof autoHideMs === 'number' ? autoHideMs : 1800;
+      setTimeout(() => {
+        // only hide if still showing same text
+        if (this.statusBig.textContent === big && !persist) {
+          this.statusBox.classList.remove('visible');
+        }
+      }, ms);
+    }
+
+    setIdleVisual() {
+      this.shape.material.color.setHex(0x334155);
+      this.shape.material.emissive.setHex(0x000000);
+      this.shape.material.emissiveIntensity = 0;
+
+      this.wire.material.color.setHex(0x475569);
+      this.wire.material.opacity = 0.25;
+    }
+
+    setWaitingVisual() {
+      this.shape.material.color.setHex(0xF59E0B);
+      this.shape.material.emissive.setHex(0xF59E0B);
+      this.shape.material.emissiveIntensity = 0.28;
+
+      this.wire.material.color.setHex(0xF59E0B);
+      this.wire.material.opacity = 0.45;
+
+      this.shape.userData.fast = false;
+      this.wire.userData.fast = false;
+    }
+
+    setActiveVisual() {
+      this.shape.material.color.setHex(0x10B981);
+      this.shape.material.emissive.setHex(0x10B981);
+      this.shape.material.emissiveIntensity = 0.82;
+
+      this.wire.material.color.setHex(0x10B981);
+      this.wire.material.opacity = 0.82;
+    }
+
+    setErrorVisual() {
+      this.shape.material.color.setHex(0xEF4444);
+      this.shape.material.emissive.setHex(0xEF4444);
+      this.shape.material.emissiveIntensity = 0.5;
+
+      this.wire.material.color.setHex(0xEF4444);
+      this.wire.material.opacity = 0.6;
+
+      this.shape.userData.fast = false;
+      this.wire.userData.fast = false;
+    }
+
+    updateStats() {
+      if (this.currentAttempt != null) {
+        this.lastTimeEl.innerHTML = `${this.currentAttempt}<span class="unit">ms</span>`;
+      } else {
+        this.lastTimeEl.textContent = '—';
+      }
+
+      this.attemptsEl.textContent = String(this.roundsStarted);
+
+      if (this.reactionTimes.length === 0) {
+        this.avgTimeEl.textContent = '—';
+        this.bestTimeEl.textContent = '—';
+        return;
+      }
+
+      const avg = Math.round(this.reactionTimes.reduce((s, t) => s + t, 0) / this.reactionTimes.length);
+      const best = Math.min(...this.reactionTimes);
+
+      this.avgTimeEl.innerHTML = `${avg}<span class="unit">ms</span>`;
+      this.bestTimeEl.innerHTML = `${best}<span class="unit">ms</span>`;
+    }
+
+    animate() {
+      requestAnimationFrame(() => this.animate());
+
+      const fast = !!this.shape.userData.fast;
+      const s = fast ? 0.055 : 0.008;
+
+      this.shape.rotation.x += s;
+      this.shape.rotation.y += s * 1.18;
+
+      this.wire.rotation.x += s;
+      this.wire.rotation.y += s * 1.18;
+
+      this.renderer.render(this.scene, this.camera);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    new ReactionTimer();
+  });
+</script>
 </body>
 </html>
