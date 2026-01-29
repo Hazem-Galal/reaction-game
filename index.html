@@ -1,3 +1,6 @@
+Reaction timer · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -243,33 +246,107 @@
             font-weight: 500;
         }
         
-        .instructions {
+        .instructions-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        
+        .instructions-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .instructions-content {
+            max-width: 500px;
+            padding: 2rem;
+            text-align: left;
+        }
+        
+        .instructions-content h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: #F1F5F9;
+            text-align: center;
+        }
+        
+        .instructions-content ol {
+            padding-left: 1.5rem;
+            color: #94A3B8;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+        
+        .instructions-content li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .instructions-content strong {
+            color: #F1F5F9;
+        }
+        
+        .instructions-content button {
+            width: 100%;
+            display: block;
+        }
+        
+        .performance-guide {
             background: #1E293B;
             padding: 1.5rem;
             border-radius: 0.75rem;
             border: 1px solid #334155;
+            margin-top: 1rem;
         }
         
-        .instructions h2 {
+        .performance-guide h3 {
             font-family: 'Poppins', sans-serif;
-            font-size: 1.25rem;
+            font-size: 1rem;
             margin-bottom: 1rem;
             color: #F1F5F9;
+            text-align: center;
         }
         
-        .instructions ol {
-            padding-left: 1.5rem;
+        .performance-scale {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .performance-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            background: rgba(51, 65, 85, 0.3);
+        }
+        
+        .performance-label {
+            font-weight: 600;
+            min-width: 120px;
+        }
+        
+        .performance-range {
             color: #94A3B8;
-            line-height: 1.8;
+            font-size: 0.875rem;
         }
         
-        .instructions li {
-            margin-bottom: 0.5rem;
-        }
-        
-        .instructions strong {
-            color: #F1F5F9;
-        }
+        .performance-item.amazing .performance-label { color: #10B981; }
+        .performance-item.very-good .performance-label { color: #3B82F6; }
+        .performance-item.good .performance-label { color: #8B5CF6; }
+        .performance-item.average .performance-label { color: #F59E0B; }
+        .performance-item.below-average .performance-label { color: #EF4444; }
         
         footer {
             padding: 2rem;
@@ -292,6 +369,35 @@
             
             .state-message.result {
                 font-size: 2.5rem;
+            }
+            
+            .instructions-content {
+                padding: 1.5rem;
+            }
+            
+            .instructions-content h2 {
+                font-size: 1.5rem;
+            }
+            
+            .instructions-content ol {
+                font-size: 0.9375rem;
+            }
+            
+            .performance-guide h3 {
+                font-size: 0.9375rem;
+            }
+            
+            .performance-item {
+                font-size: 0.875rem;
+            }
+            
+            .performance-label {
+                min-width: 100px;
+                font-size: 0.875rem;
+            }
+            
+            .performance-range {
+                font-size: 0.8125rem;
             }
             
             button {
@@ -317,6 +423,19 @@
                 <canvas id="gameCanvas"></canvas>
                 <div class="game-overlay">
                     <div class="state-message" id="stateMessage"></div>
+                </div>
+                <div class="instructions-overlay" id="instructionsOverlay">
+                    <div class="instructions-content">
+                        <h2>How to Play</h2>
+                        <ol>
+                            <li>Click <strong>Start Game</strong> to begin</li>
+                            <li>Watch the 3D shape carefully in the box</li>
+                            <li>When the shape turns <strong style="color: #10B981;">green</strong> and starts spinning rapidly, click the box immediately</li>
+                            <li>Your reaction time will be displayed in the top-right corner</li>
+                            <li><strong style="color: #EF4444;">Warning:</strong> Clicking too early counts as a false start!</li>
+                        </ol>
+                        <button class="btn-primary" id="gotItBtn">Got It!</button>
+                    </div>
                 </div>
             </div>
             
@@ -345,16 +464,30 @@
                 </div>
             </div>
             
-            <div class="instructions">
-                <h2>How to Play</h2>
-                <ol>
-                    <li>Click <strong>Start Game</strong> to begin</li>
-                    <li>Watch the 3D shape carefully in the box above</li>
-                    <li>When the shape turns <strong style="color: #10B981;">green</strong> and starts spinning rapidly, click the box immediately</li>
-                    <li>Your reaction time will be displayed in the top-right corner in milliseconds</li>
-                    <li><strong style="color: #EF4444;">Warning:</strong> Clicking too early counts as a false start!</li>
-                    <li>Try to get the lowest reaction time possible</li>
-                </ol>
+            <div class="performance-guide">
+                <h3>Reaction Time Guide</h3>
+                <div class="performance-scale">
+                    <div class="performance-item amazing">
+                        <span class="performance-label">Amazing</span>
+                        <span class="performance-range">&lt; 150ms</span>
+                    </div>
+                    <div class="performance-item very-good">
+                        <span class="performance-label">Very Good</span>
+                        <span class="performance-range">150-200ms</span>
+                    </div>
+                    <div class="performance-item good">
+                        <span class="performance-label">Good</span>
+                        <span class="performance-range">200-250ms</span>
+                    </div>
+                    <div class="performance-item average">
+                        <span class="performance-label">Average</span>
+                        <span class="performance-range">250-300ms</span>
+                    </div>
+                    <div class="performance-item below-average">
+                        <span class="performance-label">Below Average</span>
+                        <span class="performance-range">&gt; 300ms</span>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -382,13 +515,14 @@
                 this.waitTimeout = null;
                 this.attempts = [];
                 this.currentAttempt = null;
+                this.instructionsShown = false;
                 
                 this.initDOM();
                 this.initThreeJS();
                 this.initEventListeners();
                 this.updateStats();
                 this.animate();
-                this.showMessage('Click Start to Begin', 'idle');
+                // Don't show message until instructions are dismissed
             }
             
             initDOM() {
@@ -401,6 +535,8 @@
                 this.avgTimeEl = document.getElementById('avgTime');
                 this.bestTimeEl = document.getElementById('bestTime');
                 this.attemptsEl = document.getElementById('attempts');
+                this.instructionsOverlay = document.getElementById('instructionsOverlay');
+                this.gotItBtn = document.getElementById('gotItBtn');
             }
             
             initThreeJS() {
@@ -482,9 +618,21 @@
                 this.stopBtn.addEventListener('click', () => this.stopGame());
                 this.resetBtn.addEventListener('click', () => this.resetStats());
                 
+                // Handle "Got It" button to dismiss instructions
+                this.gotItBtn.addEventListener('click', () => {
+                    this.instructionsOverlay.classList.add('hidden');
+                    this.instructionsShown = true;
+                    this.showMessage('Click Start to Begin', 'idle');
+                });
+                
                 // Make the entire canvas wrapper clickable
                 this.canvas.parentElement.addEventListener('click', (e) => {
-                    // Don't trigger if clicking on overlay elements
+                    // Don't trigger if clicking on overlay elements or instructions
+                    if ((e.target === this.canvas || e.target === this.canvas.parentElement) && 
+                        !this.instructionsOverlay.classList.contains('hidden')) {
+                        return; // Don't handle clicks while instructions are showing
+                    }
+                    
                     if (e.target === this.canvas || e.target === this.canvas.parentElement) {
                         this.handleCanvasClick();
                     }
