@@ -1,13 +1,14 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Reaction Timer | Portfolio Project</title>
+  <title>Reaction Timer | Portfolio Project</title>
 
-  <!-- Polished but subtle: tiny inline SVG favicon (no external request, no clutter) -->
+  <!-- Subtle inline SVG favicon -->
   <link rel="icon" type="image/svg+xml"
-        href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%233B82F6"/><stop offset="1" stop-color="%2310B981"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="%230F172A"/><path d="M18 42 L32 14 L46 42 Z" fill="url(%23g)"/><circle cx="32" cy="46" r="4" fill="%2394A3B8"/></svg>' />
+        href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="%233B82F6"/><stop offset="1" stop-color="%2310B981"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="%230F172A"/><circle cx="32" cy="32" r="18" fill="url(%23g)"/><circle cx="32" cy="32" r="7" fill="%230B1224"/></svg>' />
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
@@ -20,7 +21,7 @@
       --text:#F1F5F9;
       --muted:#94A3B8;
       --primary:#3B82F6;
-      --ready:#10B981;
+      --go:#10B981;
       --wait:#F59E0B;
       --error:#EF4444;
     }
@@ -37,18 +38,20 @@
       overflow-x:hidden;
     }
 
+    /* tighter header → play area */
     header{
-      padding:2rem 1.5rem 1.25rem;
+      padding:1.15rem 1.25rem 0.7rem;
       text-align:center;
       background: linear-gradient(180deg, var(--surface) 0%, rgba(30,41,59,0) 100%);
     }
 
     h1{
       font-family:'Poppins', sans-serif;
-      font-size:2.25rem;
+      font-size:2.05rem;
       font-weight:700;
-      margin-bottom:0.35rem;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--ready) 100%);
+      line-height:1.1;
+      margin-bottom:0.22rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--go) 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
       background-clip:text;
@@ -56,8 +59,8 @@
 
     .subtitle{
       color:var(--muted);
-      font-size:0.98rem;
-      font-weight:500;
+      font-size:0.95rem;
+      font-weight:600;
     }
 
     main{
@@ -65,8 +68,7 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      padding:1.75rem 1.25rem 2.25rem;
-      gap:1.5rem;
+      padding:0.85rem 1.1rem 1.45rem;
     }
 
     .game-container{
@@ -74,34 +76,31 @@
       max-width:860px;
       display:flex;
       flex-direction:column;
-      gap:1rem;
+      gap:0.85rem;
       align-items:center;
     }
 
-    /* Focused hierarchy: big game area, minimal controls */
     .canvas-wrapper{
       position:relative;
       width:100%;
       max-width:640px;
       aspect-ratio:1;
       background:var(--surface);
-      border-radius:1.5rem;
+      border-radius:1.35rem;
       overflow:hidden;
       border:2px solid var(--border);
-      box-shadow: 0 22px 60px rgba(0,0,0,0.35);
+      box-shadow: 0 20px 55px rgba(0,0,0,0.35);
       cursor:pointer;
       user-select:none;
       -webkit-tap-highlight-color:transparent;
       outline:none;
-      transition: border-color 220ms ease, transform 220ms ease;
     }
 
     .canvas-wrapper:hover{ border-color:#475569; }
-    .canvas-wrapper:active{ transform: translateY(1px); }
 
     .canvas-wrapper:focus-visible{
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(59,130,246,0.25), 0 22px 60px rgba(0,0,0,0.35);
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.25), 0 20px 55px rgba(0,0,0,0.35);
     }
 
     #gameCanvas{ display:block; width:100%; height:100%; }
@@ -109,17 +108,17 @@
     .hud{
       position:absolute;
       inset:0;
-      pointer-events:none;
       z-index:10;
+      pointer-events:none;
     }
 
-    /* Top-right message: minimal + legible */
+    /* Top-right feedback: results / errors / waiting */
     .status{
       position:absolute;
-      top:1rem;
-      right:1rem;
-      max-width: calc(100% - 2rem);
-      padding:0.85rem 1rem;
+      top:0.85rem;
+      right:0.85rem;
+      max-width: calc(100% - 1.7rem);
+      padding:0.75rem 0.9rem;
       border-radius:0.9rem;
       border:1px solid transparent;
       background: rgba(11,18,36,0.78);
@@ -131,115 +130,120 @@
       font-family:'Poppins', sans-serif;
       line-height:1.15;
     }
-
     .status.visible{ opacity:1; transform: translateY(0); }
 
     .status .big{
-      font-size:2.4rem;
+      font-size:2.15rem;
       font-weight:700;
       letter-spacing:-0.02em;
     }
-
     .status .sub{
-      margin-top:0.35rem;
+      margin-top:0.32rem;
       font-family:'Inter', sans-serif;
       color:var(--muted);
-      font-size:0.95rem;
-      font-weight:600;
+      font-size:0.92rem;
+      font-weight:700;
     }
 
-    .status.idle{ border-color: rgba(148,163,184,0.18); }
+    .status.idle{ border-color: rgba(148,163,184,0.14); }
     .status.wait{ border-color: rgba(245,158,11,0.5); }
     .status.go{ border-color: rgba(16,185,129,0.55); }
     .status.result{ border-color: rgba(59,130,246,0.55); }
     .status.err{ border-color: rgba(239,68,68,0.55); }
 
-    .status.idle .big{ color: var(--muted); font-size:1.15rem; font-weight:700; }
+    .status.idle .big{ color: var(--muted); font-size:1.05rem; }
     .status.wait .big{ color: var(--wait); }
-    .status.go .big{ color: var(--ready); }
+    .status.go .big{ color: var(--go); }
     .status.result .big{ color: var(--primary); }
-    .status.err .big{ color: var(--error); font-size:1.15rem; }
+    .status.err .big{ color: var(--error); font-size:1.08rem; }
 
-    /* Instructions inside game space, shown ONCE, disappear naturally on first start */
-    .instructions{
+    /* Instruction INSIDE play area, bottom-center under the shape */
+    .in-game-instruction{
       position:absolute;
-      inset:0;
-      z-index:20;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: rgba(15,23,42,0.94);
-      backdrop-filter: blur(12px);
-      transition: opacity 240ms ease;
-    }
-
-    .instructions.hidden{
-      opacity:0;
+      left:50%;
+      transform: translateX(-50%);
+      bottom:0.85rem;
+      width: calc(100% - 1.7rem);
+      max-width: 560px;
+      text-align:center;
+      padding:0.72rem 0.9rem;
+      border-radius:0.95rem;
+      border:1px solid rgba(148,163,184,0.16);
+      background: rgba(11,18,36,0.72);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+      opacity:1;
+      transition: opacity 220ms ease, transform 220ms ease;
+      color: var(--muted);
+      font-weight:900;
+      font-size:0.98rem;
       pointer-events:none;
     }
 
-    .instructions-card{
-      width:min(520px, calc(100% - 2.25rem));
-      padding:1.4rem 1.35rem;
-      border-radius:1.2rem;
-      border:1px solid rgba(148,163,184,0.18);
-      background: rgba(11,18,36,0.72);
-      box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+    .in-game-instruction.hidden{
+      opacity:0;
+      transform: translateX(-50%) translateY(6px);
     }
 
-    .instructions-card h2{
-      font-family:'Poppins', sans-serif;
-      font-size:1.25rem;
-      text-align:center;
-      margin-bottom:0.75rem;
+    /* Stats: compact, supportive */
+    .stats{
+      width:100%;
+      max-width:640px;
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:0.7rem;
     }
 
-    .instructions-card p{
+    .stat{
+      background: rgba(30,41,59,0.55);
+      border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 0.95rem;
+      padding:0.85rem 0.95rem;
+    }
+
+    .stat .label{
+      font-size:0.76rem;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
       color:var(--muted);
-      line-height:1.55;
-      font-weight:600;
-      font-size:0.98rem;
-      margin-bottom:0.9rem;
-      text-align:center;
+      font-weight:900;
+      margin-bottom:0.35rem;
     }
 
-    .kbd{
-      display:inline-flex;
-      align-items:center;
-      gap:0.4rem;
-      padding:0.2rem 0.5rem;
-      border-radius:0.5rem;
-      border:1px solid rgba(148,163,184,0.22);
-      background: rgba(30,41,59,0.45);
+    .stat .value{
+      font-family:'Poppins', sans-serif;
+      font-size:1.32rem;
       font-weight:800;
-      color:var(--text);
-      font-size:0.9rem;
+      color: var(--primary);
+      line-height:1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .dot{
-      display:inline-block;
-      width:0.55rem;
-      height:0.55rem;
-      border-radius:999px;
-      vertical-align:middle;
-      margin:0 0.25rem;
-      background: var(--ready);
-      box-shadow: 0 0 0 6px rgba(16,185,129,0.12);
+    .unit{
+      font-family:'Inter', sans-serif;
+      font-size:0.92rem;
+      font-weight:900;
+      margin-left:0.2rem;
+      color: var(--muted);
     }
 
-    .instruction-cta{
+    .controls{
+      width:100%;
+      max-width:640px;
       display:flex;
-      gap:0.75rem;
       justify-content:center;
+      gap:0.65rem;
       flex-wrap:wrap;
-      margin-top:0.35rem;
+      margin-top:0.05rem;
     }
 
     button{
       font-family:'Inter', system-ui, sans-serif;
       font-size:0.98rem;
-      font-weight:800;
-      padding:0.9rem 1.25rem;
+      font-weight:900;
+      padding:0.85rem 1.15rem;
       border:none;
       border-radius:0.9rem;
       cursor:pointer;
@@ -251,13 +255,15 @@
       transform: translateY(-2px);
       box-shadow: 0 12px 30px rgba(0,0,0,0.32);
     }
-
     button:active{ transform: translateY(0); }
-
     button:disabled{ opacity:0.5; cursor:not-allowed; transform:none; box-shadow: 0 8px 24px rgba(0,0,0,0.16); }
 
     .btn-primary{
       background: linear-gradient(135deg, var(--primary) 0%, #2563EB 100%);
+      color:#fff;
+    }
+    .btn-danger{
+      background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%);
       color:#fff;
     }
     .btn-secondary{
@@ -265,116 +271,67 @@
       color: var(--text);
       border: 1px solid rgba(148,163,184,0.18);
     }
-    .btn-danger{
-      background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%);
-      color:#fff;
-    }
-
-    /* Supporting UI: compact stats row */
-    .stats{
-      width:100%;
-      max-width:640px;
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap:0.75rem;
-      margin-top:0.25rem;
-    }
-
-    .stat{
-      background: rgba(30,41,59,0.55);
-      border: 1px solid rgba(148,163,184,0.12);
-      border-radius: 0.95rem;
-      padding:0.9rem 1rem;
-    }
-
-    .stat .label{
-      font-size:0.78rem;
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-      color:var(--muted);
-      font-weight:800;
-      margin-bottom:0.4rem;
-    }
-
-    .stat .value{
-      font-family:'Poppins', sans-serif;
-      font-size:1.35rem;
-      font-weight:800;
-      color: var(--primary);
-      line-height:1;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .unit{
-      font-family:'Inter', sans-serif;
-      font-size:0.95rem;
-      font-weight:800;
-      margin-left:0.2rem;
-      color: var(--muted);
-    }
-
-    /* Minimal controls: only what matters */
-    .controls{
-      width:100%;
-      max-width:640px;
-      display:flex;
-      justify-content:center;
-      gap:0.75rem;
-      flex-wrap:wrap;
-      margin-top:0.4rem;
-    }
 
     footer{
-      padding:1.25rem;
+      padding:0.95rem 1.25rem 1.05rem;
       text-align:center;
-      color: rgba(148,163,184,0.75);
+      color: rgba(148,163,184,0.72);
       font-size:0.85rem;
     }
 
+    /* Mobile: tighter spacing, remove space-bar references via JS + media */
     @media (max-width: 720px){
-      h1{ font-size:1.95rem; }
-      main{ padding:1.35rem 1rem 1.75rem; }
-      .status .big{ font-size:2.05rem; }
+      header{ padding:1rem 1rem 0.6rem; }
+      main{ padding:0.7rem 0.9rem 1.2rem; }
+      h1{ font-size:1.85rem; }
+      .subtitle{ font-size:0.9rem; }
+
+      .canvas-wrapper{
+        max-width: 92vw;
+        border-radius:1.25rem;
+      }
+
+      .status{ top:0.7rem; right:0.7rem; padding:0.68rem 0.82rem; }
+      .status .big{ font-size:1.95rem; }
+      .status .sub{ font-size:0.88rem; }
+
+      .in-game-instruction{
+        bottom:0.72rem;
+        font-size:0.95rem;
+      }
+
       .stats{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      button{ width:100%; max-width:220px; }
+    }
+
+    /* If the device is touch-first, we’ll never show keyboard hint */
+    @media (hover: none) and (pointer: coarse){
+      .kbdHint{ display:none !important; }
     }
   </style>
 </head>
 
 <body>
 <header>
-  <h1>3D Reaction Timer</h1>
-  <p class="subtitle">A clean, focused reflex test with 3D feedback</p>
+  <h1>Reaction Timer</h1>
+  <p class="subtitle">Tap/click to start, react on green</p>
 </header>
 
 <main>
   <div class="game-container">
-    <!-- Start is discoverable: click anywhere in here or press Space -->
     <div class="canvas-wrapper" id="canvasWrapper" role="button" tabindex="0"
-         aria-label="Game area. Click or press Space to start and react.">
+         aria-label="Game area. Tap or click to start and react.">
       <canvas id="gameCanvas"></canvas>
 
       <div class="hud">
-        <div class="status idle visible" id="statusBox">
-          <div class="big" id="statusBig">Click anywhere or press Space</div>
-          <div class="sub" id="statusSub">Start a round, then react when it turns green</div>
+        <div class="status idle visible" id="statusBox" aria-live="polite">
+          <div class="big" id="statusBig">Ready</div>
+          <div class="sub" id="statusSub">Tap/click to start</div>
         </div>
-      </div>
 
-      <div class="instructions" id="instructionsOverlay">
-        <div class="instructions-card">
-          <h2>Quick instructions</h2>
-          <p>
-            <span class="kbd">Space</span> or <strong>click anywhere</strong> to start.
-            Wait for the shape to turn <span class="dot"></span><strong>green</strong>, then click/press <span class="kbd">Space</span> as fast as you can.
-            <br><br>
-            Clicking early is a <strong style="color:var(--error);">false start</strong>.
-          </p>
-          <div class="instruction-cta">
-            <button class="btn-primary" id="startFromOverlayBtn" type="button">Start (Space)</button>
-            <button class="btn-secondary" id="dismissOverlayBtn" type="button">Got it</button>
-          </div>
+        <!-- Instruction positioned below the interactive shape (inside play area) -->
+        <div class="in-game-instruction" id="inGameHint">
+          Click here<span class="kbdHint"> or press space</span> to start
         </div>
       </div>
     </div>
@@ -407,7 +364,7 @@
 </main>
 
 <footer>
-  Built with Three.js • Designed for clarity and flow
+  Built with Three.js • Clean, responsive interaction design
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -420,13 +377,12 @@
     ERROR: 'error',
   };
 
-  // Human-friendly categories
   function gradeReaction(ms) {
-    if (ms < 150) return { label: 'Amazing', detail: 'Elite reflexes', key: 'amazing' };
-    if (ms < 200) return { label: 'Very Good', detail: 'Fast and consistent', key: 'very-good' };
-    if (ms < 250) return { label: 'Good', detail: 'Above average', key: 'good' };
-    if (ms < 300) return { label: 'Average', detail: 'Typical range', key: 'average' };
-    return { label: 'Below Average', detail: 'Warm up and try again', key: 'below-average' };
+    if (ms < 150) return { label: 'Amazing', detail: 'Elite reflexes' };
+    if (ms < 200) return { label: 'Very Good', detail: 'Fast and consistent' };
+    if (ms < 250) return { label: 'Good', detail: 'Above average' };
+    if (ms < 300) return { label: 'Average', detail: 'Typical range' };
+    return { label: 'Below Average', detail: 'Warm up and try again' };
   }
 
   class ReactionTimer {
@@ -435,18 +391,14 @@
       this.startTime = null;
       this.waitTimeout = null;
 
-      // Attempts = rounds started (button or space or click)
+      // Attempts = rounds started (any method)
       this.roundsStarted = 0;
 
-      // Valid reaction times only
+      // Valid reactions only
       this.reactionTimes = [];
       this.currentAttempt = null;
 
-      // Instructions: shown once per page load; disappear naturally when play begins
-      this.instructionsVisible = true;
-      this.overlayEverDismissed = false;
-
-      // Space handling
+      // Space handling (desktop)
       this._spaceDown = false;
 
       this.initDOM();
@@ -455,6 +407,8 @@
       this.updateStats();
       this.setIdleVisual();
       this.focusGameArea();
+      this.updatePlatformCopy();
+
       this.animate();
     }
 
@@ -466,9 +420,7 @@
       this.statusBig = document.getElementById('statusBig');
       this.statusSub = document.getElementById('statusSub');
 
-      this.instructionsOverlay = document.getElementById('instructionsOverlay');
-      this.startFromOverlayBtn = document.getElementById('startFromOverlayBtn');
-      this.dismissOverlayBtn = document.getElementById('dismissOverlayBtn');
+      this.inGameHint = document.getElementById('inGameHint');
 
       this.startBtn = document.getElementById('startBtn');
       this.stopBtn = document.getElementById('stopBtn');
@@ -478,6 +430,21 @@
       this.avgTimeEl = document.getElementById('avgTime');
       this.bestTimeEl = document.getElementById('bestTime');
       this.attemptsEl = document.getElementById('attempts');
+    }
+
+    isTouchFirst() {
+      return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    }
+
+    updatePlatformCopy() {
+      // Mobile: remove space-bar references
+      if (this.isTouchFirst()) {
+        this.inGameHint.textContent = 'Tap here to start';
+        this.statusSub.textContent = 'Tap to start';
+      } else {
+        this.inGameHint.innerHTML = 'Click here<span class="kbdHint"> or press space</span> to start';
+        this.statusSub.textContent = 'Click or press space to start';
+      }
     }
 
     initThree() {
@@ -490,7 +457,6 @@
       this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
       this.updateRendererSize();
 
-      // Lighting
       this.scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
       const dir1 = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -505,7 +471,6 @@
       point.position.set(0, 0, 8);
       this.scene.add(point);
 
-      // Shape
       const geom = new THREE.IcosahedronGeometry(1.5, 1);
       const mat = new THREE.MeshStandardMaterial({
         color: 0x334155,
@@ -516,7 +481,6 @@
       this.shape = new THREE.Mesh(geom, mat);
       this.scene.add(this.shape);
 
-      // Wireframe accent
       const wireGeom = new THREE.IcosahedronGeometry(1.52, 1);
       const wireMat = new THREE.MeshBasicMaterial({
         color: 0x475569,
@@ -527,7 +491,10 @@
       this.wire = new THREE.Mesh(wireGeom, wireMat);
       this.scene.add(this.wire);
 
-      window.addEventListener('resize', () => this.updateRendererSize(), { passive: true });
+      window.addEventListener('resize', () => {
+        this.updateRendererSize();
+        this.updatePlatformCopy();
+      }, { passive: true });
     }
 
     updateRendererSize() {
@@ -541,24 +508,16 @@
     }
 
     initEvents() {
-      // Primary start: click anywhere in game area OR Space
-      this.canvasWrapper.addEventListener('click', () => {
-        this.handlePress('pointer');
-      });
+      // Primary interaction: tap/click inside play area
+      this.canvasWrapper.addEventListener('click', () => this.handlePress('pointer'));
 
-      // Start button (kept for discoverability, but not required)
-      this.startBtn.addEventListener('click', () => {
-        this.handlePress('startBtn');
-      });
+      // Start button also starts a round
+      this.startBtn.addEventListener('click', () => this.handlePress('startBtn'));
 
       this.stopBtn.addEventListener('click', () => this.stopGame());
       this.resetBtn.addEventListener('click', () => this.resetStats());
 
-      // Overlay actions
-      this.dismissOverlayBtn.addEventListener('click', () => this.dismissOverlay());
-      this.startFromOverlayBtn.addEventListener('click', () => this.handlePress('overlayStart'));
-
-      // Space always works (prevents "press focused button" behavior)
+      // Desktop keyboard: Space triggers the same action (hidden on mobile copy)
       window.addEventListener('keydown', (e) => {
         if (e.code !== 'Space') return;
         e.preventDefault();
@@ -567,8 +526,8 @@
 
         const active = document.activeElement;
         if (active && ['BUTTON','INPUT','TEXTAREA','SELECT'].includes(active.tagName)) active.blur();
-        this.focusGameArea();
 
+        this.focusGameArea();
         this.handlePress('space');
       }, { passive: false });
 
@@ -579,41 +538,18 @@
     }
 
     focusGameArea() {
-      // keeps keyboard flow consistent
       this.canvasWrapper.focus();
     }
 
-    dismissOverlay() {
-      if (!this.instructionsVisible) return;
-      this.instructionsVisible = false;
-      this.overlayEverDismissed = true;
-      this.instructionsOverlay.classList.add('hidden');
-      this.focusGameArea();
-    }
-
-    dismissOverlayIfNeeded() {
-      // shown only once per load; disappears naturally when the game begins
-      if (this.instructionsVisible && !this.overlayEverDismissed) {
-        this.dismissOverlay();
-      } else if (this.instructionsVisible) {
-        // if user kept it visible but starts anyway, hide it
-        this.dismissOverlay();
-      }
-    }
-
-    handlePress(source) {
-      // If idle/result/error: start a round
+    handlePress() {
       if (this.state === GameState.IDLE || this.state === GameState.RESULT || this.state === GameState.ERROR) {
-        this.dismissOverlayIfNeeded();
         this.startGame();
         return;
       }
-      // If waiting: false start
       if (this.state === GameState.WAITING) {
         this.handleFalseStart();
         return;
       }
-      // If active: record
       if (this.state === GameState.ACTIVE) {
         this.recordReaction();
         return;
@@ -625,7 +561,7 @@
 
       this.clearWaitTimeout();
 
-      // Attempts count starts (any method)
+      // Attempts increment for every round start
       this.roundsStarted += 1;
       this.updateStats();
 
@@ -636,11 +572,15 @@
 
       this.currentAttempt = null;
 
+      // Reduce clutter during active flow
+      this.inGameHint.classList.add('hidden');
+
       this.setWaitingVisual();
-      this.setStatus('WAIT…', 'Click/Space when it turns green', 'wait', true);
+      this.setStatus('WAIT…', 'React when it turns green', 'wait', true);
 
       const delay = 1000 + Math.random() * 4000;
       this.waitTimeout = setTimeout(() => this.activateStimulus(), delay);
+
       this.focusGameArea();
     }
 
@@ -651,7 +591,7 @@
       this.startTime = performance.now();
 
       this.setActiveVisual();
-      this.setStatus('GO!', 'React now', 'go', true);
+      this.setStatus('GO!', 'Tap/click now', 'go', true);
 
       this.shape.userData.fast = true;
       this.wire.userData.fast = true;
@@ -664,7 +604,10 @@
       this.state = GameState.ERROR;
 
       this.setErrorVisual();
-      this.setStatus('Too early', 'False start — start again', 'err', false, 1400);
+      this.setStatus('Too early', 'False start — try again', 'err', false, 1400);
+
+      // Return hint after feedback settles
+      setTimeout(() => this.inGameHint.classList.remove('hidden'), 700);
 
       this.startBtn.disabled = false;
       this.stopBtn.disabled = true;
@@ -673,7 +616,7 @@
         if (this.state === GameState.ERROR) {
           this.state = GameState.IDLE;
           this.setIdleVisual();
-          this.setStatus('Click anywhere or press Space', 'Start a round, then react on green', 'idle', true);
+          this.setStatus('Ready', this.isTouchFirst() ? 'Tap to start' : 'Click or press space to start', 'idle', true);
           this.focusGameArea();
         }
       }, 900);
@@ -690,7 +633,7 @@
 
       this.state = GameState.RESULT;
 
-      // Human-friendly result: category + short meaning
+      // Human-friendly category + meaning
       this.setStatus(`${ms} ms`, `${g.label} — ${g.detail}`, 'result', false, 2600);
 
       this.updateStats();
@@ -702,9 +645,11 @@
       this.shape.userData.fast = false;
       this.wire.userData.fast = false;
 
+      // Bring hint back once result fades
       setTimeout(() => {
         if (this.state === GameState.RESULT) {
-          this.setStatus('Click anywhere or press Space', 'Try again to beat your best', 'idle', true);
+          this.inGameHint.classList.remove('hidden');
+          this.setStatus('Ready', this.isTouchFirst() ? 'Tap to start' : 'Click or press space to start', 'idle', true);
         }
       }, 2650);
 
@@ -718,7 +663,7 @@
       this.state = GameState.IDLE;
 
       this.setIdleVisual();
-      this.setStatus('Stopped', 'Click/Space to start again', 'idle', false, 1200);
+      this.setStatus('Stopped', this.isTouchFirst() ? 'Tap to start' : 'Click or press space to start', 'idle', false, 1100);
 
       this.startBtn.disabled = false;
       this.stopBtn.disabled = true;
@@ -726,11 +671,13 @@
       this.shape.userData.fast = false;
       this.wire.userData.fast = false;
 
+      this.inGameHint.classList.remove('hidden');
+
       setTimeout(() => {
         if (this.state === GameState.IDLE) {
-          this.setStatus('Click anywhere or press Space', 'Start a round, then react on green', 'idle', true);
+          this.setStatus('Ready', this.isTouchFirst() ? 'Tap to start' : 'Click or press space to start', 'idle', true);
         }
-      }, 1250);
+      }, 1150);
 
       this.focusGameArea();
     }
@@ -748,11 +695,12 @@
         this.setIdleVisual();
         setTimeout(() => {
           if (this.state === GameState.IDLE) {
-            this.setStatus('Click anywhere or press Space', 'Start a round, then react on green', 'idle', true);
+            this.setStatus('Ready', this.isTouchFirst() ? 'Tap to start' : 'Click or press space to start', 'idle', true);
           }
         }, 950);
       }
 
+      this.inGameHint.classList.remove('hidden');
       this.focusGameArea();
     }
 
@@ -772,7 +720,6 @@
 
       const ms = typeof autoHideMs === 'number' ? autoHideMs : 1800;
       setTimeout(() => {
-        // only hide if still showing same text
         if (this.statusBig.textContent === big && !persist) {
           this.statusBox.classList.remove('visible');
         }
@@ -865,3 +812,4 @@
 </script>
 </body>
 </html>
+```
